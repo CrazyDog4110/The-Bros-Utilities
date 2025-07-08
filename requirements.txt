@@ -1,0 +1,15 @@
+discord.py
+requests
+bs4
+os
+sys
+pytimeparse
+datetime
+jokeapi
+random
+logging
+traceback
+sqlite3
+aiohttp
+re
+urllib
