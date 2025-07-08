@@ -1,22 +1,24 @@
 import discord 
 import requests
-from bs4 import BeautifulSoup
 from discord.ext import commands
-from discord.ext import tasks
 from discord import app_commands
 import os
 import sys
 from pytimeparse.timeparse import timeparse
-import datetime
 from jokeapi import Jokes
-from random import choice
 import logging
 import traceback
 import sqlite3
-import aiohttp
-import re
 from urllib.parse import urlparse
-from discord import ui
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = os.getenv("BOT_TOKEN")
+SOBBOARD = os.getenv("SOB_BOARD")
+SKULLBOARD = os.getenv("SKULL_BOARD")
+MAINSERVER = os.getenv("SERVER_ID")
+PREFIX = os.getenv("PREFIX")
 
 in_app = []
 
@@ -66,7 +68,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-bot = commands.Bot(command_prefix=[".", "<@1285858287404847185> ", "<@1285858287404847185>"], intents=intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX), intents=intents)
 
 bot.remove_command('help')
 bot.remove_command('strike')
@@ -93,7 +95,7 @@ def get_random_dad_joke():
 @bot.command(name= 'Watch')
 @commands.is_owner()
 async def Watch(ctx):
-    await ctx.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="The Bros"))
+    await ctx.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=ctx.guild.name))
 
 @bot.hybrid_command(name='membercount', aliases=['members'], description='View the servers member count')
 async def membercount(ctx):
@@ -126,7 +128,7 @@ async def ping(ctx):
 @commands.has_permissions(manage_messages=True)
 @app_commands.default_permissions(manage_messages=True)
 async def help(ctx):
-    HelpEmbed = discord.Embed(title="Anti-Sleep Help Menu", description="Prefix: .", color=0x00ff00)
+    HelpEmbed = discord.Embed(title=f"{bot.user} Help Menu", description=f"Prefix: {PREFIX}", color=0x00ff00)
     HelpEmbed.add_field(name="topic", value="Generate a random topic\n"
                         "Optional arguments: Channel", inline=False)
     HelpEmbed.add_field(name="revive", value="Generate a topic and ping dead chat ping\n"
@@ -157,20 +159,20 @@ async def joke(interaction):
 @bot.command(name= 'restart')
 @commands.is_owner()
 async def restart(ctx):
-    id = str(ctx.author.id)
-    if id == '902784993301004348':
+    id = int(ctx.author.id)
+    if id == bot.owner_id:
         await ctx.send("Restarting bot...")
         print(f'Restart Executed')
         restart_bot()
         await ctx.send("Complete")
     else:
-        await ctx.send("Imagine not having perms")
+        await ctx.send("You must be bot owner to run this command.")
         
 @bot.command(name= 'sync')
 @commands.is_owner()
 async def sync(ctx):
     print("sync command")
-    if str(ctx.author.id) == "902784993301004348":
+    if int(ctx.author.id) == bot.owner_id:
         await bot.tree.sync()
         await ctx.send('Command tree synced.')
     else:
@@ -180,76 +182,12 @@ async def sync(ctx):
 @commands.is_owner()
 async def shutdown(ctx):
     print("shutdown command")
-    if str(ctx.author.id) == "902784993301004348":
+    if str(ctx.author.id) == bot.owner_id:
         await ctx.send('Shutting down...')
         await ctx.bot.close()
         quit()
     else:
         await ctx.send('You must be the owner to use this command!')
-
-@bot.tree.command(name= "tags", description="Send a tag")
-@app_commands.describe(tag='Tags to choose from')
-@app_commands.default_permissions(manage_messages = True)
-@app_commands.choices(
-    tag=[
-    app_commands.Choice(name='Anti-Sleep Invite', value="Anti-Sleep Invite"),
-    app_commands.Choice(name='Media', value="Media"),
-    app_commands.Choice(name='Anti-Sleep', value="Anti-Sleep"),
-    app_commands.Choice(name='Applications', value="Applications"),
-    app_commands.Choice(name='Quotes', value="Quotes"),
-    app_commands.Choice(name='Hosting', value="Hosting")
-])
-async def tag(interaction, tag: app_commands.Choice[str]):
-    tag = tag.name
-    if interaction.guild.id == 1081122313870778471:
-        if tag == "media" or tag == "Media":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            MediaTagEmbed = discord.Embed(title="Tag - Media", description="**Why can't I send media?**\n"
-                                        "At Level Five you unlock media in <#1232086351093039164> and <#1161884115885379625>\n"
-                                        "At Level Twenty-Five you unlock media everywhere else!", color=0x00ff00)
-            await channel.send(embed=MediaTagEmbed)
-        elif tag == "anti-sleep invite" or tag == "Anti-Sleep Invite":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            AntiSleepTagEmbed = discord.Embed(title="Tag - Anti-Sleep Invite", description="**Why can't I invite Anti-Sleep?**\n"
-                                        "Anti-Sleep is a Private Bot made by <@902784993301004348> for this server, it is not publically available.", color=0x00ff00)
-            await channel.send(embed=AntiSleepTagEmbed)
-        elif tag == "anti-sleep" or tag == "Anti-Sleep":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            AntiSleepTagEmbed = discord.Embed(title="Tag - Anti-Sleep ", description="**What is Anti-Sleep?**\n"
-                                        "Anti-Sleep is a Private Bot made by <@902784993301004348> for this 1342369080224780312.\n" 
-                                        "it is being updated every day with the goal of one day keeping chat alive.\n" 
-                                        "It's commands require the Manage Messages permission to use because it is a bot designed only to be used by Staff.\n"
-                                        "As it is a Private Bot, it is not publically available.", color=0x00ff00)
-            await channel.send(embed=AntiSleepTagEmbed)
-        elif tag == "applications" or tag == "Applications":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            ApplicationTagEmbed = discord.Embed(title="Tag - Applications ", description="**How do I apply?**\n"
-                                        "Moderator applications are currently **__closed__**, News Ping will be pinged when they open.\n"
-                                        "Event planner applications are currently **__open__**, Head to https://discord.com/channels/1081122313870778471/1224550149548671168 to apply.", color=0x00ff00)
-            await channel.send(embed=ApplicationTagEmbed)
-        elif tag == "quotes" or tag == "Quotes":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            QuoteTagEmbed = discord.Embed(title="Tag - Make It A Quote", description="**What is Make it a quote?**\n"
-                                        "Make it a quote is a bot that makes quotes of messages. It is added for humorous perpouses.\n"
-                                        "Do not spam it, you will be warned.\n"
-                                        "How do I get started? Gald you asked. Reply to a message and in the reply ping the bot and it'll make a quote for you.\n"
-                                        "You can also add extra tags to make the quote look different! They are\n"
-                                        "light (l) : Makes the background of the image white, color (c) : Color the user icon, flip (f) : Flip the image, bold (b) : Make the text bold, new (n) : Use new type image generation, font=<Font name> : Change the font to the specified one.", color=0x00ff00)
-            await channel.send(embed=QuoteTagEmbed)
-        elif tag == "hosting" or tag == "Hosting":
-            await interaction.response.send_message("Sent!", ephemeral= True)
-            channel = interaction.channel
-            TagListEmbed = discord.Embed(title="Tag - Hosting", description="**How is Anti-Sleep hosted?**\n"
-                                        "Anti-Sleep is currently hosted at a Vultr data center in New Jersey.\n"
-                                        "You guys happy now?", color=0x00ff00)
-            await channel.send(embed=TagListEmbed)
-    else:
-        await interaction.response.send_message("This command is not compatible with this guild!", ephemeral=True)
 
 # Function to check if a message is blacklisted
 def is_message_blacklisted(message_id):
@@ -264,11 +202,11 @@ def blacklist_message(message_id):
 # Your bot event code
 @bot.event
 async def on_raw_reaction_add(payload):
-    if payload.guild_id == 1081122313870778471:
+    if payload.guild_id == MAINSERVER:
         channel = payload.channel_id
         channel_obj = await bot.fetch_channel(channel)
-        send_channel_sob = bot.get_channel(1287919598380912670)
-        send_channel_skull = bot.get_channel(1235495254170271784)
+        send_channel_sob = bot.get_channel(SOBBOARD)
+        send_channel_skull = bot.get_channel(SKULLBOARD)
         message_id = payload.message_id
         
         # Check if the message is blacklisted using the database
@@ -372,15 +310,15 @@ async def on_raw_reaction_add(payload):
                 else:
                     print("No relevant reaction.")
 
-    if payload.guild_id == 1268137172288929906:
+    if payload.guild_id == MAINSERVER:
         channel = payload.channel_id
         channel_obj = await bot.fetch_channel(channel)
-        send_channel_skull = bot.get_channel(1291183423720919181)
+        send_channel_skull = bot.get_channel(SKULLBOARD)
         message_id = payload.message_id
         message = await discord.TextChannel.fetch_message(channel_obj, message_id) 
         for reaction in message.reactions:
             if reaction.emoji == "💀":
-                if reaction.count == 3 and channel != 1291183423720919181 and message.guild.id == 1268137172288929906:
+                if reaction.count == 3 and channel != SKULLBOARD and message.guild.id == MAINSERVER:
                     if message.attachments:
                         embed = discord.Embed(title="💀", description=f"{message.content}")
                         embed.set_image(url=message.attachments[0].url)
@@ -476,9 +414,9 @@ async def on_ready():
     await bot.load_extension('cogs.Applications')
     await bot.load_extension('cogs.listener')
     await bot.load_extension('cogs.mediaonly')
+    bot.owner_id = (await bot.application_info()).owner.id
     await setstauts()
     print(f'We have logged in as {bot.user}')
 
-
 discord.utils.setup_logging(handler=handler)
-bot.run("Your Token Here", log_handler=handler)     
+bot.run(TOKEN, log_handler=handler)     
