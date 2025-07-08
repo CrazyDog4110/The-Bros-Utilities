@@ -3,7 +3,7 @@
 2. Open a terminal of your choice in that directory
 3. Run `pip3 install -r requirements.txt`
 
-# How to start
+# How to start the bot
 1. Open Main.py
 2. Scroll to the bottom and replace "your token here" with your bot token
 3. run Main.py
