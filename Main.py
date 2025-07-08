@@ -481,4 +481,4 @@ async def on_ready():
 
 
 discord.utils.setup_logging(handler=handler)
-bot.run("MTI4NTg1ODI4NzQwNDg0NzE4NQ.G4yG2-.i0OHXN-hrX8RszKAk1Vo437BnE9BW6hvONzn5Y", log_handler=handler)     
+bot.run("Your Token Here", log_handler=handler)     
