@@ -6,4 +6,4 @@
 # How to start the bot
 1. Rename .env.example to .env
 2. Set the values to what you want it to be, you NEED to put the bot token there.
-3. Run main.py
+3. Run Main.py
